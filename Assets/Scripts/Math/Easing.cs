@@ -1,60 +1,41 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace DouduckGame.Math {
-    public enum Easing {
-        Linear,
+	public delegate float EasingEquation(float t);
 
-        EaseInQuad,
-        EaseOutQuad,
-        EaseInOutQuad,
-        EaseOutInQuad,
+	[System.Serializable]
+	public partial class Easing {
 
-        EaseInCubic,
-        EaseOutCubic,
-        EaseInOutCubic,
-        EaseOutInCubic,
+		[SerializeField]
+		private EasingType m_easingType = EasingType.Linear;
+		public EasingType easingType { 
+			get {
+				return m_easingType;
+			}
+			set {
+				m_easingType = value;
+				SetUpEquation ();
+			} 
+		}
 
-        EaseInQuart,
-        EaseOutQuart,
-        EaseInOutQuart,
-        EaseOutInQuart,
+		private EasingEquation m_equation = null;
 
-        EaseInQuint,
-        EaseOutQuint,
-        EaseInOutQuint,
-        EaseOutInQuint,
+		public Easing (EasingType type) {
+			easingType = type;
+		}
 
-        EaseInSine,
-        EaseOutSine,
-        EaseInOutSine,
-        EaseOutInSine,
+		public float Ease (float t) {
+			if (m_equation == null) {
+				SetUpEquation ();
+			}
+			return m_equation (t);
+		}
 
-        EaseInExpo,
-        EaseOutExpo,
-        EaseInOutExpo,
-        EaseOutInExpo,
-
-        EaseInCirc,
-        EaseOutCirc,
-        EaseInOutCirc,
-        EaseOutInCirc,
-
-        EaseInBack,
-        EaseOutBack,
-        EaseInOutBack,
-        EaseOutInBack,
-
-        EaseInElastic,
-        EaseOutElastic,
-        EaseInOutElastic,
-        EaseOutInElastic,
-
-        EaseInBounce,
-        EaseOutBounce,
-        EaseInOutBounce,
-        EaseOutInBounce
-    }
+		private void SetUpEquation () {
+			m_equation = GetEquation (m_easingType);
+		}
+	}
 }
-
