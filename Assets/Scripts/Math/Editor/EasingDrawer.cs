@@ -6,45 +6,41 @@ using UnityEditor;
 using DouduckGame.Math;
 
 [CustomPropertyDrawer (typeof (Easing))]
-public class EasingEquationEditor : PropertyDrawer {
+public class EasingDrawer : PropertyDrawer {
 
 	private readonly float curveFieldHeight = 150f;
-	private readonly int pointNumber = 40;
+	private readonly int pointNumber = 50;
 	private EasingEquation m_equation;
 
 	public override float GetPropertyHeight (SerializedProperty property, GUIContent label) {
-		return base.GetPropertyHeight (property, label);
-	}
+        float baseHeight_ = base.GetPropertyHeight (property, label);
+        return property.isExpanded ? curveFieldHeight + baseHeight_ : baseHeight_;
+    }
 
 	public override void OnGUI (Rect position, SerializedProperty property, GUIContent label) {
 		label = EditorGUI.BeginProperty (position, label, property);
 
 		EditorGUI.BeginChangeCheck ();
-		SerializedProperty typeProperty_ = property.FindPropertyRelative ("m_easingType");
-		EditorGUI.PropertyField (position, typeProperty_, new GUIContent ("Easing Type"));
+		EditorGUI.PropertyField (position, property.FindPropertyRelative ("m_settedType"), new GUIContent ("Easing Type"));
 		if (EditorGUI.EndChangeCheck ()) {
-			SetUpEquation (typeProperty_.enumValueIndex);
-		}
+            UpdateEquation (property);
+        }
 
 		property.isExpanded = EditorGUI.Foldout (position, property.isExpanded, label);
 		if (property.isExpanded) {
 			Rect contentPosition = EditorGUI.IndentedRect (position);
 			contentPosition.y += 18f;
 			contentPosition.height = curveFieldHeight;
-			DrawCurveField (contentPosition);
+			DrawCurveField (contentPosition, property);
 		}
 
 		EditorGUI.EndProperty();
 	}
 
-	private void SetUpEquation (int enumIdx) {
-		m_equation = Easing.GetEquation ((EasingType)(property.FindPropertyRelative ("m_easingType").enumValueIndex));
-	}
-
-	private void DrawCurveField (Rect position) {
+	private void DrawCurveField (Rect position, SerializedProperty property) {
 		if (m_equation == null) {
-
-		}
+            UpdateEquation (property);
+        }
 
 		position.x = (position.width - curveFieldHeight) / 2f;
 		position.width = curveFieldHeight;
@@ -64,7 +60,12 @@ public class EasingEquationEditor : PropertyDrawer {
 			point2.x += position.x;
 			point2.y = position.y + curveFieldHeight - point2.y;
 
-			Handles.DrawLine (point1, point2);
+            Handles.color = Color.red;
+            Handles.DrawLine (point1, point2);
 		}
 	}
+
+    private void UpdateEquation (SerializedProperty property) {
+        m_equation = Easing.GetEquation ((EasingType)property.FindPropertyRelative ("m_settedType").enumValueIndex);
+    }
 }
