@@ -10,7 +10,15 @@ public class EasingDrawer : PropertyDrawer {
 
 	private readonly float curveFieldHeight = 150f;
 	private readonly int pointNumber = 50;
-	private EasingEquation m_equation;
+
+    private Easing m_target = null;
+    private Easing GetTarget (SerializedProperty property) {
+        if (m_target == null) {
+            var obj = this.fieldInfo.GetValue (property.serializedObject.targetObject);
+            m_target = (Easing)obj;
+        }
+        return m_target;
+    }
 
 	public override float GetPropertyHeight (SerializedProperty property, GUIContent label) {
         float baseHeight_ = base.GetPropertyHeight (property, label);
@@ -23,10 +31,10 @@ public class EasingDrawer : PropertyDrawer {
 		EditorGUI.BeginChangeCheck ();
 		EditorGUI.PropertyField (position, property.FindPropertyRelative ("m_settedType"), new GUIContent ("Easing Type"));
 		if (EditorGUI.EndChangeCheck ()) {
-            UpdateEquation (property);
+            GetTarget(property).easingType = (EasingType)(property.FindPropertyRelative ("m_settedType").enumValueIndex);
         }
 
-		property.isExpanded = EditorGUI.Foldout (position, property.isExpanded, label);
+        property.isExpanded = EditorGUI.Foldout (position, property.isExpanded, label);
 		if (property.isExpanded) {
 			Rect contentPosition = EditorGUI.IndentedRect (position);
 			contentPosition.y += 18f;
@@ -38,8 +46,8 @@ public class EasingDrawer : PropertyDrawer {
 	}
 
 	private void DrawCurveField (Rect position, SerializedProperty property) {
-		if (m_equation == null) {
-            UpdateEquation (property);
+		if (m_target == null) {
+            GetTarget (property);
         }
 
 		position.x = (position.width - curveFieldHeight) / 2f;
@@ -50,8 +58,8 @@ public class EasingDrawer : PropertyDrawer {
 		for (int i = 0; i < pointNumber; i++) {
 			float x1 = deltaX_ * i;
 			float x2 = deltaX_ * (i + 1);
-			Vector2 point1 = new Vector2 (x1, m_equation (x1));
-			Vector2 point2 = new Vector2 (x2, m_equation (x2));
+			Vector2 point1 = new Vector2 (x1, m_target.Ease (x1));
+			Vector2 point2 = new Vector2 (x2, m_target.Ease (x2));
 
 			point1 *= curveFieldHeight;
 			point1.x += position.x;
@@ -64,8 +72,4 @@ public class EasingDrawer : PropertyDrawer {
             Handles.DrawLine (point1, point2);
 		}
 	}
-
-    private void UpdateEquation (SerializedProperty property) {
-        m_equation = Easing.GetEquation ((EasingType)property.FindPropertyRelative ("m_settedType").enumValueIndex);
-    }
 }
