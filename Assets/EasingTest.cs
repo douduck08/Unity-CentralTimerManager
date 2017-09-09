@@ -9,12 +9,7 @@ public class EasingTest : MonoBehaviour {
     public struct EasingData {
         public GameObject go;
         public Easing easing;
-        public Easing[] easingList;
     }
-
-    public Easing m_easing;
-    public EasingData m_inStuct;
-    public List<Easing> m_inList;
     public List<EasingData> m_inStuctList;
 
     public float height = 10f;
@@ -26,7 +21,7 @@ public class EasingTest : MonoBehaviour {
         for (int i = 0; i < m_inStuctList.Count; i++) {
             if (m_inStuctList[i].go != null) {
                 float x = m_inStuctList[i].go.transform.position.x;
-                m_inStuctList[i].go.transform.position = new Vector2 (0, m_inStuctList[i].easing.Ease (m_time / durability) * height) * 10f;
+                m_inStuctList[i].go.transform.position = new Vector2 (x, m_inStuctList[i].easing.Ease (m_time / durability) * height);
             }
         }
         if (m_time > durability) {
