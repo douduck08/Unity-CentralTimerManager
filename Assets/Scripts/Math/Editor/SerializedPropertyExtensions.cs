@@ -10,33 +10,42 @@ using UnityEngine;
 public static class SerializedPropertyExtensions {
 
     public static T GetValue<T> (this SerializedProperty property) {
-        return (T) GetNestedObject (property.propertyPath, property.serializedObject.targetObject);
+        object obj = property.serializedObject.targetObject;
+        string path = property.propertyPath.Replace (".Array.data", "");
+        string[] fieldStructure = path.Split ('.');
+        Regex rgx = new Regex (@"\[\d+\]");
+        for (int i = 0; i < fieldStructure.Length; i++) {
+            if (fieldStructure[i].Contains ("[")) {
+                int index = System.Convert.ToInt32 (new string (fieldStructure[i].Where (c => char.IsDigit (c)).ToArray ()));
+                obj = GetFieldWithIndex (rgx.Replace (fieldStructure[i], ""), obj, index);
+            } else {
+                obj = GetFieldOrPropertyValue (fieldStructure[i], obj);
+            }
+        }
+        return (T) obj;
     }
 
     public static bool SetValue<T> (this SerializedProperty property, object value) {
         object obj = property.serializedObject.targetObject;
-        //Iterate to parent object of the value, necessary if it is a nested object
-        string[] fieldStructure = property.propertyPath.Split ('.');
-        for (int i = 0; i < fieldStructure.Length - 1; i++) {
-            obj = GetFieldOrPropertyValue (fieldStructure[i], obj);
-        }
-        string fieldName = fieldStructure.Last ();
-
-        return SetFieldOrPropertyValue (fieldName, obj, value);
-    }
-
-    private static object GetNestedObject (string path, object obj) {
-        path = path.Replace (".Array.data", "");
+        string path = property.propertyPath.Replace (".Array.data", "");
+        string[] fieldStructure = path.Split ('.');
         Regex rgx = new Regex (@"\[\d+\]");
-        foreach (string part in path.Split ('.')) {
-            if (part.Contains ("[")) {
-                int index = System.Convert.ToInt32 (new string (part.Where (c => char.IsDigit (c)).ToArray ()));
-                obj = GetFieldWithIndex (rgx.Replace (part, ""), obj, index);
+        for (int i = 0; i < fieldStructure.Length - 1; i++) {
+            if (fieldStructure[i].Contains ("[")) {
+                int index = System.Convert.ToInt32 (new string (fieldStructure[i].Where (c => char.IsDigit (c)).ToArray ()));
+                obj = GetFieldValueWithIndex (rgx.Replace (fieldStructure[i], ""), obj, index);
             } else {
-                obj = GetFieldOrPropertyValue (part, obj);
+                obj = GetFieldOrPropertyValue (fieldStructure[i], obj);
             }
         }
-        return obj;
+
+        string fieldName = fieldStructure.Last ();
+        if (fieldStructure[i].Contains ("[")) {
+            int index = System.Convert.ToInt32 (new string (fieldStructure[i].Where (c => char.IsDigit (c)).ToArray ()));
+            return SetFieldValueWithIndex (fieldName, obj, value);
+        } else {
+            return SetFieldOrPropertyValue (fieldName, obj, value);
+        }
     }
 
     private static object GetFieldOrPropertyValue (string fieldName, object obj, BindingFlags bindings = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic) {
@@ -51,7 +60,7 @@ public static class SerializedPropertyExtensions {
         return default (object);
     }
 
-    private static object GetFieldWithIndex (string fieldName, object obj, int index, BindingFlags bindings = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic) {
+    private static object GetFieldValueWithIndex (string fieldName, object obj, int index, BindingFlags bindings = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic) {
         FieldInfo field = obj.GetType ().GetField (fieldName, bindings);
         if (field != null) {
             object value = field.GetValue (obj);
@@ -80,6 +89,24 @@ public static class SerializedPropertyExtensions {
         if (property != null) {
             property.SetValue (obj, value, null);
             return true;
+        }
+        return false;
+    }
+
+    public static bool SetFieldValueWithIndex (string fieldName, object obj, object value, bool includeAllBases = false, BindingFlags bindings = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic) {
+        FieldInfo field = obj.GetType ().GetField (fieldName, bindings);
+        if (field != null) {
+            object value = field.GetValue (obj);
+            IEnumerable enumerable = value as IEnumerable;
+            if (enumerable != null) {
+                IEnumerator enumerator = enumerable.GetEnumerator ();
+                while (index-- >= 0) {
+                    enumerator.MoveNext ();
+                }
+                return enumerator.Current;
+            } else {
+                return value;
+            }
         }
         return false;
     }
