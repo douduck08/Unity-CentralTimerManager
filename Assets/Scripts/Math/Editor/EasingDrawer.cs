@@ -16,10 +16,9 @@ public class EasingDrawer : PropertyDrawer {
     private Easing m_target = null;
     private Easing GetTarget (SerializedProperty property) {
         if (m_target == null) {
-            m_target = SerializedPropertyExtensions.GetNestedObject<Easing> (property.propertyPath, property.serializedObject.targetObject);
-            // m_target = GetValue<Easing> (property);
+            m_target = property.GetValue<Easing> ();
         }
-        Debug.Log(m_target);
+        Debug.Log("m_target = " + m_target);
         return m_target;
     }
 

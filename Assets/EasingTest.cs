@@ -9,6 +9,7 @@ public class EasingTest : MonoBehaviour {
     public struct EasingData {
         public GameObject go;
         public Easing easing;
+        public Easing[] easingList;
     }
 
     public Easing m_easing;
