@@ -1,8 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
-using System;
+using System.Reflection;
 using DouduckGame.Math;
 using UnityEditor;
 using UnityEngine;
@@ -15,21 +15,34 @@ public class EasingDrawer : PropertyDrawer {
 
     public override float GetPropertyHeight (SerializedProperty property, GUIContent label) {
         float baseHeight_ = base.GetPropertyHeight (property, label);
-        return property.isExpanded ? curveFieldHeight + baseHeight_ : baseHeight_;
+        return property.isExpanded ? 36f + curveFieldHeight + baseHeight_ : baseHeight_;
     }
 
     public override void OnGUI (Rect position, SerializedProperty property, GUIContent label) {
         label = EditorGUI.BeginProperty (position, label, property);
+        Rect contentPosition = position;
+        contentPosition.height = 18f;
 
         EditorGUI.BeginChangeCheck ();
-        EditorGUI.PropertyField (position, property.FindPropertyRelative ("m_settedType"), label);
+        EditorGUI.PropertyField (contentPosition, property.FindPropertyRelative ("m_settedType"), label);
         if (EditorGUI.EndChangeCheck ()) {
-            property.GetValue<Easing> ().easingType = (EasingType)(property.FindPropertyRelative ("m_settedType").enumValueIndex);
+            property.GetValue<Easing> ().easingType = (EasingType) (property.FindPropertyRelative ("m_settedType").enumValueIndex);
         }
 
-        property.isExpanded = EditorGUI.Foldout (position, property.isExpanded, label);
+        property.isExpanded = EditorGUI.Foldout (contentPosition, property.isExpanded, label);
         if (property.isExpanded) {
-            Rect contentPosition = EditorGUI.IndentedRect (position);
+            GUI.enabled = property.GetValue<Easing> ().easingType == EasingType.CubicBezier;
+            EditorGUI.BeginChangeCheck ();
+            contentPosition.y += 18f;
+            EditorGUI.PropertyField (contentPosition, property.FindPropertyRelative ("m_bezierPoint1"), new GUIContent ("Bezier Point1"));
+            contentPosition.y += 18f;
+            EditorGUI.PropertyField (contentPosition, property.FindPropertyRelative ("m_bezierPoint2"), new GUIContent ("Bezier Point2"));
+            if (EditorGUI.EndChangeCheck ()) {
+                property.GetValue<Easing> ().SetBezierPoint(property.FindPropertyRelative ("m_bezierPoint1").vector2Value, property.FindPropertyRelative ("m_bezierPoint2").vector2Value);
+            }
+            GUI.enabled = true;
+
+            contentPosition = EditorGUI.IndentedRect (contentPosition);
             contentPosition.y += 18f;
             contentPosition.height = curveFieldHeight;
             DrawCurveField (contentPosition, property);

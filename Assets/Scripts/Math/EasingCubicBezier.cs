@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace DouduckGame.Math {
-    [System.Serializable]
     public class EasingCubicBezier {
 
         private const float ACCURACY = 0.001f;
+
+        private Vector2 m_point1;
+        private Vector2 m_point2;
 
         private Vector2 m_coefficientA;
         private Vector2 m_coefficientB;
         private Vector2 m_coefficientC;
 
         public EasingCubicBezier () {
-            SetCoefficient (new Vector2(0.5f, 0.5f), new Vector2 (0.5f, 0.5f));
+            SetCoefficient (new Vector2 (0.5f, 0.5f), new Vector2 (0.5f, 0.5f));
         }
 
         public EasingCubicBezier (Vector2 point1, Vector2 point2) {
@@ -42,7 +44,7 @@ namespace DouduckGame.Math {
         }
 
         public float Ease (float x) {
-            float left = 0f, right = 1f, center = 0.5f; ;
+            float left = 0f, right = 1f, center = 0.5f;;
             while (right > left + ACCURACY) {
                 center = (left + right) / 2f;
                 if (x > XOnCubicBezier (center)) {

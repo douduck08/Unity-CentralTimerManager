@@ -59,6 +59,7 @@ namespace DouduckGame.Math {
         public void SetBezierPoint (Vector2 point1, Vector2 point2) {
             m_bezierPoint1 = point1;
             m_bezierPoint2 = point2;
+            m_easingCubicBezier.SetCoefficient (m_bezierPoint1, m_bezierPoint2);
         }
 
         private void SetUpEquation (EasingType type) {

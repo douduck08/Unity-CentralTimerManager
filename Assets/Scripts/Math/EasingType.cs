@@ -5,7 +5,6 @@ using UnityEngine;
 namespace DouduckGame.Math {
     public enum EasingType {
         Linear,
-        CubicBezier,
 
         EaseInQuad,
         EaseOutQuad,
@@ -55,7 +54,9 @@ namespace DouduckGame.Math {
         EaseInBounce,
         EaseOutBounce,
         EaseInOutBounce,
-        EaseOutInBounce
+        EaseOutInBounce,
+
+        CubicBezier
     }
 }
 
